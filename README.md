@@ -15,3 +15,4 @@ https://github.com/tamani-coding/threejs-character-controls-example/blob/main/sr
 https://github.com/mrdoob/three.js/blob/master/examples/webgl_animation_walk.html
 https://github.com/mrdoob/three.js/blob/master/examples/games_fps.html
 https://github.com/tamani-coding/threejs-character-controls-example/blob/main/src/characterControls.ts
+https://threejs.org/examples/#misc_controls_pointerlock
