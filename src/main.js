@@ -129,6 +129,8 @@ function animate() {
     // Set raycaster origin and direction
     raycaster.set(character.position, movementDirection.clone().normalize());
 
+    character.rotation.set(0, horizontalLookAngle, 0);
+
     // Check for intersections with the collisionObjects array
     const intersects = raycaster.intersectObjects(collisionObjects, true);
     if (intersects.length > 0 && intersects[0].distance < collisionDistance) {
