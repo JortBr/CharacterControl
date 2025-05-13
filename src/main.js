@@ -65,10 +65,20 @@ window.addEventListener("click", () => {
   document.body.requestPointerLock();
 });
 
-// Map inladen.
+const collisionObjects = []; // Array to store objects for collision detection
+
+// Load the map and add it to the collisionObjects array
 const mapLoader = new GLTFLoader();
 mapLoader.load("assets/models/texturedmap.glb", (gltf) => {
-  scene.add(gltf.scene); // Adding the map to the scene.
+  const map = gltf.scene;
+  scene.add(map); // Add the map to the scene
+
+  // Add all children of the map to the collisionObjects array
+  map.traverse((child) => {
+    if (child.isMesh) {
+      collisionObjects.push(child);
+    }
+  });
 });
 
 let character;
@@ -78,6 +88,9 @@ loader.load("assets/models/Soldier.glb", (gltf) => {
   character.scale.set(1, 1, 1);
   scene.add(character);
 });
+
+const raycaster = new THREE.Raycaster(); // Raycaster for collision detection
+const collisionDistance = 0.5; // Minimum distance to detect collisions
 
 function animate() {
   requestAnimationFrame(animate); // https://threejs.org/manual/#en/creating-a-scene according to this documentation it's better to use this.
@@ -104,9 +117,22 @@ function animate() {
     movementDirection.normalize().multiplyScalar(5 * deltaTime); // 5 units per second.
   }
 
-  // Update character position.
+  // Collision detection
   if (character) {
-    character.position.add(movementDirection);
+    const futurePosition = character.position.clone().add(movementDirection);
+
+    // Set raycaster origin and direction
+    raycaster.set(character.position, movementDirection.clone().normalize());
+
+    // Check for intersections with the collisionObjects array
+    const intersects = raycaster.intersectObjects(collisionObjects, true);
+    if (intersects.length > 0 && intersects[0].distance < collisionDistance) {
+      // Collision detected, prevent movement
+      movementDirection.set(0, 0, 0);
+    } else {
+      // No collision, update character position
+      character.position.copy(futurePosition);
+    }
   }
 
   // Update camera position to follow the character.
