@@ -15,12 +15,12 @@ document.body.appendChild(renderer.domElement);
 const color = 0xffffff;
 const intensity = 2;
 const light = new THREE.DirectionalLight(color, intensity);
-light.position.set(10, 10, 10); // Even mee zitten klote om alles te kunnen zien werkte dit.
+light.position.set(10, 10, 10);
 scene.add(light);
 
 camera.position.set(0, 1.5, 0);
 
-const pressedKeys = {}; // leeg object om ingedrukte toetsen op te slaan.
+const pressedKeys = {}; // Empty object to capture pressed keys.
 document.addEventListener(
   "keydown",
   (e) => (pressedKeys[e.key.toLowerCase()] = true)
@@ -30,15 +30,24 @@ document.addEventListener(
   (e) => (pressedKeys[e.key.toLowerCase()] = false)
 );
 
-// Rotatie- en positiegegevens van de speler
-let horizontalLookAngle = 0; // horizontale rotatie (links/rechts)
-let verticalLookAngle = 0; // verticale rotatie (omhoog/omlaag)
+// Rotation and Position information of the player.
+let horizontalLookAngle = 0; // Horizontal rotation.
+let verticalLookAngle = 0; // Vertical rotation.
 const cameraRotation = new THREE.Quaternion();
 const cameraPosition = new THREE.Vector3(0, 2, 0);
 const movementDirection = new THREE.Vector3();
 let previousFrameTime = performance.now();
 
-// Muisbeweging voor rotatie
+// Mouse movement for rotation.
+document.addEventListener("pointerlockchange", () => {
+  if (document.pointerLockElement) {
+    // Pointer lock is active.
+    document.addEventListener("mousemove", onMouseMove);
+  } else {
+    // Pointer lock is inactive.
+    document.removeEventListener("mousemove", onMouseMove);
+  }
+});
 document.addEventListener("mousemove", (e) => {
   const movementX = e.movementX || 0;
   const movementY = e.movementY || 0;
@@ -51,7 +60,7 @@ document.addEventListener("mousemove", (e) => {
   );
 });
 
-// Vraag pointer lock aan bij klikken
+// Request pointer lock on click.
 window.addEventListener("click", () => {
   document.body.requestPointerLock();
 });
@@ -59,7 +68,7 @@ window.addEventListener("click", () => {
 // Map inladen.
 const mapLoader = new GLTFLoader();
 mapLoader.load("assets/models/texturedmap.glb", (gltf) => {
-  scene.add(gltf.scene); // Map toevoegen aan scene.
+  scene.add(gltf.scene); // Adding the map to the scene.
 });
 
 let character;
@@ -71,21 +80,53 @@ loader.load("assets/models/Soldier.glb", (gltf) => {
 });
 
 function animate() {
-  requestAnimationFrame(animate); // https://threejs.org/manual/#en/creating-a-scene volgens de docs is het beter om dit te gebruiken.
+  requestAnimationFrame(animate); // https://threejs.org/manual/#en/creating-a-scene according to this documentation it's better to use this.
 
+  const currentFrameTime = performance.now();
+  const deltaTime = (currentFrameTime - previousFrameTime) / 1000; // Time elapsed since last frame in seconds.
+  previousFrameTime = currentFrameTime;
+
+  // Reset movement direction.
   movementDirection.set(0, 0, 0);
+
+  // Update movement direction based on pressed keys.
   if (pressedKeys["w"]) movementDirection.z -= 1;
   if (pressedKeys["s"]) movementDirection.z += 1;
   if (pressedKeys["a"]) movementDirection.x -= 1;
   if (pressedKeys["d"]) movementDirection.x += 1;
 
-  renderer.render(scene, camera); // De scene en camera in renderen.
+  // Rotate movement direction based on camera's horizontal rotation.
+  const rotationMatrix = new THREE.Matrix4().makeRotationY(horizontalLookAngle);
+  movementDirection.applyMatrix4(rotationMatrix);
+
+  // Normalize and scale movement direction.
+  if (movementDirection.length() > 0) {
+    movementDirection.normalize().multiplyScalar(5 * deltaTime); // 5 units per second.
+  }
+
+  // Update character position.
+  if (character) {
+    character.position.add(movementDirection);
+  }
+
+  // Update camera position to follow the character.
+  cameraPosition.copy(character ? character.position : new THREE.Vector3());
+  cameraPosition.y += 1.5; // Offset the camera height.
+  camera.position.copy(cameraPosition);
+
+  // Update camera rotation.
+  camera.quaternion.setFromEuler(
+    new THREE.Euler(verticalLookAngle, horizontalLookAngle, 0, "YXZ")
+  );
+
+  // Rendering the scene.
+  renderer.render(scene, camera); // Rendering the scene and camera.
 }
 
 window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-}); // Van voorgaande project handig om het responsive te houden.
+}); // To keep the aspect ratio of the camera and renderer in sync with the window size.
 
 animate();
