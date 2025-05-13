@@ -21,14 +21,17 @@ scene.add(light);
 camera.position.set(0, 1.5, 0);
 
 const pressedKeys = {}; // Empty object to capture pressed keys.
-document.addEventListener(
-  "keydown",
-  (e) => (pressedKeys[e.key.toLowerCase()] = true)
-);
-document.addEventListener(
-  "keyup",
-  (e) => (pressedKeys[e.key.toLowerCase()] = false)
-);
+let isSprinting = false;
+document.addEventListener("keydown", (e) => {
+  pressedKeys[e.key.toLowerCase()] = true;
+  if (e.key.toLowerCase() === "shift") {
+    isSprinting = true; // Set sprinting to true when shift is pressed.
+  }
+});
+document.addEventListener("keyup", (e) => {
+  pressedKeys[e.key.toLowerCase()] = false;
+  isSprinting = false; // Set sprinting to false when shift is released.
+});
 
 // Rotation and Position information of the player.
 let horizontalLookAngle = 0; // Horizontal rotation.
@@ -112,9 +115,11 @@ function animate() {
   const rotationMatrix = new THREE.Matrix4().makeRotationY(horizontalLookAngle);
   movementDirection.applyMatrix4(rotationMatrix);
 
+  const moveSpeed = isSprinting ? 10 : 5; // Sprint = 10 / normal = 5
+
   // Normalize and scale movement direction.
   if (movementDirection.length() > 0) {
-    movementDirection.normalize().multiplyScalar(5 * deltaTime); // 5 units per second.
+    movementDirection.normalize().multiplyScalar(moveSpeed * deltaTime); // 5 units per second.
   }
 
   // Collision detection
