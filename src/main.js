@@ -20,6 +20,42 @@ scene.add(light);
 
 camera.position.set(0, 1.5, 0);
 
+const pressedKeys = {}; // leeg object om ingedrukte toetsen op te slaan.
+document.addEventListener(
+  "keydown",
+  (e) => (pressedKeys[e.key.toLowerCase()] = true)
+);
+document.addEventListener(
+  "keyup",
+  (e) => (pressedKeys[e.key.toLowerCase()] = false)
+);
+
+// Rotatie- en positiegegevens van de speler
+let horizontalLookAngle = 0; // horizontale rotatie (links/rechts)
+let verticalLookAngle = 0; // verticale rotatie (omhoog/omlaag)
+const cameraRotation = new THREE.Quaternion();
+const cameraPosition = new THREE.Vector3(0, 2, 0);
+const movementDirection = new THREE.Vector3();
+let previousFrameTime = performance.now();
+
+// Muisbeweging voor rotatie
+document.addEventListener("mousemove", (e) => {
+  const movementX = e.movementX || 0;
+  const movementY = e.movementY || 0;
+
+  horizontalLookAngle -= movementX * 0.002;
+
+  verticalLookAngle = Math.max(
+    -Math.PI / 2,
+    Math.min(Math.PI / 2, verticalLookAngle - movementY * 0.002)
+  );
+});
+
+// Vraag pointer lock aan bij klikken
+window.addEventListener("click", () => {
+  document.body.requestPointerLock();
+});
+
 // Map inladen.
 const mapLoader = new GLTFLoader();
 mapLoader.load("assets/models/texturedmap.glb", (gltf) => {
@@ -36,6 +72,12 @@ loader.load("assets/models/Soldier.glb", (gltf) => {
 
 function animate() {
   requestAnimationFrame(animate); // https://threejs.org/manual/#en/creating-a-scene volgens de docs is het beter om dit te gebruiken.
+
+  movementDirection.set(0, 0, 0);
+  if (pressedKeys["w"]) movementDirection.z -= 1;
+  if (pressedKeys["s"]) movementDirection.z += 1;
+  if (pressedKeys["a"]) movementDirection.x -= 1;
+  if (pressedKeys["d"]) movementDirection.x += 1;
 
   renderer.render(scene, camera); // De scene en camera in renderen.
 }
