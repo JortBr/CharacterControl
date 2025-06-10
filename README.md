@@ -12,6 +12,8 @@ If you want to try this project take the following steps:
 - Npm install
 - Npx vite
 
+<img width="454" src="https://github.com/user-attachments/assets/622dd5c0-7a48-4f20-8f3e-ba559849949a">
+
 Sources I have looked at:
 
 https://www.youtube.com/watch?v=3DMZETkPieI
