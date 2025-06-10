@@ -12,6 +12,7 @@ If you want to try this project take the following steps:
 - Npm install
 - Npx vite
 
+
 Here I'm handling all the required information for the character movement:
 <img width="454" src="https://github.com/user-attachments/assets/c59f4b22-c8d4-46c3-9f5e-508da46f251b">
 
