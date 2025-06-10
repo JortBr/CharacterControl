@@ -1,16 +1,24 @@
 # CharacterControl
 Three.js CharacterControl for my personal project fps game
 
-If you want to try this project take the following steps:
-- Press on the green button that says code
-- Now press on the copy icon after the https url
-- Open up cmd and go to the directory u want it to be in
-- Now type git clone "paste the url here" and press enter
-- Open up the folder in your development environment like visual studio code
-- Make sure you have Node.js installed
+🚀 How to Run This Project
+- Press the green Code button on this GitHub repository.
+- Click the copy icon next to the HTTPS URL.
+- Open CMD or Terminal and navigate to the directory where you want to clone the project:
+  cd path/to/your/folder
+- Clone the repository using the copied URL:
+  git clone https://github.com/your-username/your-repo-name.git
+- Open the project folder in your development environment (e.g., Visual Studio Code).
+- Make sure you have Node.js installed. You can check with:
+  node -v
+  npm -v
 - Open up the terminal
-- Npm install
-- Npx vite
+- Install the required dependencies:
+  npm install
+  npm install three
+  npm install vite --save-dev
+- Start the development server using Vite:
+  npx vite
 
 
 Here I'm handling all the required information for the character movement:
