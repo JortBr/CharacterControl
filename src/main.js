@@ -40,6 +40,7 @@ const cameraRotation = new THREE.Quaternion();
 const cameraPosition = new THREE.Vector3(0, 2, 0);
 const movementDirection = new THREE.Vector3();
 let previousFrameTime = performance.now();
+let pendingMouseMove = null;
 
 // Mouse movement for rotation.
 document.addEventListener("pointerlockchange", () => {
@@ -52,6 +53,8 @@ document.addEventListener("pointerlockchange", () => {
   }
 });
 document.addEventListener("mousemove", (e) => {
+  pendingMouseMove = e;
+
   const movementX = e.movementX || 0;
   const movementY = e.movementY || 0;
 
@@ -67,6 +70,21 @@ document.addEventListener("mousemove", (e) => {
 window.addEventListener("click", () => {
   document.body.requestPointerLock();
 });
+
+function processMouseMove() {
+  if (pendingMouseMove) {
+    const movementX = pendingMouseMove.movementX || 0;
+    const movementY = pendingMouseMove.movementY || 0;
+
+    horizontalLookAngle -= movementX * 0.002;
+    verticalLookAngle = Math.max(
+      -Math.PI / 2,
+      Math.min(Math.PI / 2, verticalLookAngle - movementY * 0.002)
+    );
+
+    pendingMouseMove = null;
+  }
+}
 
 const collisionObjects = []; // Array to store objects for collision detection
 
@@ -98,6 +116,8 @@ const collisionDistance = 0.5; // Minimum distance to detect collisions
 
 function animate() {
   requestAnimationFrame(animate); // https://threejs.org/manual/#en/creating-a-scene according to this documentation it's better to use this.
+
+  processMouseMove();
 
   const currentFrameTime = performance.now();
   const deltaTime = (currentFrameTime - previousFrameTime) / 1000; // Time elapsed since last frame in seconds.
