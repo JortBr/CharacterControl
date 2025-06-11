@@ -22,7 +22,7 @@ Three.js CharacterControl for my personal project fps game
 
 
 Here I'm handling all the required information for the character movement:
-<img width="454" src="https://github.com/user-attachments/assets/c59f4b22-c8d4-46c3-9f5e-508da46f251b">
+<img width="454" src="https://github.com/user-attachments/assets/f5433331-aeed-4fae-93ea-74a210f49dc2">
 
 In this code I'm waiting for an event trigger on the pointerlockchange, which determines if the pointer is locked. If that's the case, the event listener on mousemove starts:
 <img width="454" src="https://github.com/user-attachments/assets/2cea2f8b-ae68-49c0-8f9e-a76b30ee99c2">
@@ -64,11 +64,11 @@ Finally, I render the updated scene and camera:
 
 <img width="454" src="https://github.com/user-attachments/assets/07f6775e-35de-4719-b43f-bef542bba62d">
 
-https://www.youtube.com/watch?v=3DMZETkPieI
-https://www.youtube.com/watch?v=oqKzxPMLWxo
-https://github.com/tamani-coding/threejs-character-controls-example/blob/main/src/index.ts
-https://github.com/mrdoob/three.js/blob/master/examples/webgl_animation_walk.html
-https://github.com/mrdoob/three.js/blob/master/examples/games_fps.html
-https://github.com/tamani-coding/threejs-character-controls-example/blob/main/src/characterControls.ts
-https://threejs.org/examples/#misc_controls_pointerlock
+https://www.youtube.com/watch?v=3DMZETkPieI 
+https://www.youtube.com/watch?v=oqKzxPMLWxo 
+https://github.com/tamani-coding/threejs-character-controls-example/blob/main/src/index.ts 
+https://github.com/mrdoob/three.js/blob/master/examples/webgl_animation_walk.html 
+https://github.com/mrdoob/three.js/blob/master/examples/games_fps.html 
+https://github.com/tamani-coding/threejs-character-controls-example/blob/main/src/characterControls.ts 
+https://threejs.org/examples/#misc_controls_pointerlock 
 https://github.com/simondevyoutube/ThreeJS_Tutorial_FirstPersonCamera/blob/main/main.js
