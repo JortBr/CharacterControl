@@ -13,7 +13,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 const color = 0xffffff;
-const intensity = 2;
+const intensity = 1;
 const light = new THREE.DirectionalLight(color, intensity);
 light.position.set(10, 10, 10);
 scene.add(light);
@@ -21,7 +21,7 @@ scene.add(light);
 camera.position.set(0, 1.5, 0);
 
 const pressedKeys = {}; // Empty object to capture pressed keys.
-let isSprinting = false;
+let isSprinting = false; // Variable to track sprinting state.
 document.addEventListener("keydown", (e) => {
   pressedKeys[e.key.toLowerCase()] = true;
   if (e.key.toLowerCase() === "shift") {
@@ -79,6 +79,7 @@ mapLoader.load("assets/models/texturedmap.glb", (gltf) => {
   // Add all children of the map to the collisionObjects array
   map.traverse((child) => {
     if (child.isMesh) {
+      console.log(child);
       collisionObjects.push(child);
     }
   });
@@ -129,6 +130,7 @@ function animate() {
     // Set raycaster origin and direction
     raycaster.set(character.position, movementDirection.clone().normalize());
 
+    // Makes the character face the direction of camera.
     character.rotation.set(0, horizontalLookAngle, 0);
 
     // Check for intersections with the collisionObjects array
