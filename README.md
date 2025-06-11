@@ -24,7 +24,7 @@ Three.js CharacterControl for my personal project fps game
 
 
 1:
-<img width="454" src="https://github.com/user-attachments/assets/c59f4b22-c8d4-46c3-9f5e-508da46f251b">
+<img width="454" src="https://github.com/user-attachments/assets/40f5c78d-3b76-413e-a7a4-dd358ed82afa">
 
 2:
 <img width="454" src="https://github.com/user-attachments/assets/2cea2f8b-ae68-49c0-8f9e-a76b30ee99c2">
@@ -61,5 +61,10 @@ Three.js CharacterControl for my personal project fps game
 
 12:
 <img width="454" src="https://github.com/user-attachments/assets/07f6775e-35de-4719-b43f-bef542bba62d">
+
+Results:
+<img width="454" src="https://github.com/user-attachments/assets/40f5c78d-3b76-413e-a7a4-dd358ed82afa">
+
+<img width="454" src="https://github.com/user-attachments/assets/f96bcd57-ab05-4b1e-b09d-5c9ff54d8c9a">
 
 https://socket.io/docs/v4/tutorial/step-7
