@@ -1,5 +1,64 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { io } from "socket.io-client";
+
+// Initialize socket connection to the server.
+const socket = io("http://localhost:3000");
+// Check if the socket connection is established.
+const otherPlayers = {};
+
+// Listen for the "init" event to receive initial player data.
+socket.on("init", (players) => {
+  for (const id in players) {
+    // If the player ID is not the same as the socket ID, add them to the scene.
+    if (id !== socket.id) {
+      // Add other players to the scene.
+      addOtherPlayer(id, players[id]);
+    } else {
+      console.log("something went wrong");
+    }
+  }
+});
+
+socket.on("newPlayer", (data) => {
+  if (data.id !== socket.id) {
+    addOtherPlayer(data.id, data);
+  } else {
+    console.log("something went wrong");
+  }
+});
+
+socket.on("update", (data) => {
+  const other = otherPlayers[data.id];
+  if (other) {
+    other.position.set(data.position.x, data.position.y, data.position.z);
+    other.rotation.y = data.rotation;
+  }
+});
+
+socket.on("removePlayer", (id) => {
+  if (otherPlayers[id]) {
+    scene.remove(otherPlayers[id]);
+    delete otherPlayers[id];
+  }
+});
+
+function addOtherPlayer(id, data) {
+  const loader = new GLTFLoader();
+  loader.load("assets/models/Soldier.glb", (gltf) => {
+    const player = gltf.scene;
+    player.scale.set(1, 1, 1);
+    player.position.set(
+      data.position?.x || 0,
+      data.position?.y || 0,
+      data.position?.z || 0
+    );
+    player.rotation.y = data.rotation || 0;
+
+    scene.add(player);
+    otherPlayers[id] = player;
+  });
+}
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -162,6 +221,15 @@ function animate() {
       // No collision, update character position
       character.position.copy(futurePosition);
     }
+
+    socket.emit("update", {
+      position: {
+        x: character.position.x,
+        y: character.position.y,
+        z: character.position.z,
+      },
+      rotation: horizontalLookAngle,
+    });
   }
 
   // Update camera position to follow the character.
@@ -173,6 +241,18 @@ function animate() {
   camera.quaternion.setFromEuler(
     new THREE.Euler(verticalLookAngle, horizontalLookAngle, 0, "YXZ")
   );
+
+  // Send position and rotation to the server.
+  if (character) {
+    socket.emit("update", {
+      position: {
+        x: character.position.x,
+        y: character.position.y,
+        z: character.position.z,
+      },
+      rotation: horizontalLookAngle,
+    });
+  }
 
   // Rendering the scene.
   renderer.render(scene, camera); // Rendering the scene and camera.
