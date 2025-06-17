@@ -16,6 +16,8 @@ Three.js CharacterControl for my personal project fps game
 - Install the required dependencies:
   - npm install
   - npm install three
+  - npm install socket.io
+  - npm install socket.io-client
   - npm install vite --save-dev
 - Start the development server using Vite:
   - npx vite
