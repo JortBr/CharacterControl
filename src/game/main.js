@@ -2,20 +2,112 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { io } from "socket.io-client";
 
-// Initialize socket connection to the server.
-const socket = io("http://localhost:3000");
-// Check if the socket connection is established.
-const otherPlayers = {};
+// --- Networking Setup ---
+const socket = io("http://localhost:3000"); // Initialize socket connection to the server.
+const otherPlayers = {}; // Check if the socket connection is established.
 
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(
+  75,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// --- Lighting Setup ---
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(10, 10, 10);
+scene.add(light);
+
+camera.position.set(0, 1.5, 0);
+
+// --- Player State ---
+let character;
+const pressedKeys = {}; // Empty object to capture pressed keys.
+let isSprinting = false; // Variable to track sprinting state.
+let horizontalLookAngle = 0; // Horizontal rotation.
+let verticalLookAngle = 0; // Vertical rotation.
+const cameraPosition = new THREE.Vector3(0, 2, 0);
+const movementDirection = new THREE.Vector3();
+let previousFrameTime = performance.now();
+let pendingMouseMove = null;
+
+// --- Collision Detection Setup ---
+const collisionObjects = []; // Array to store objects for collision detection
+const raycaster = new THREE.Raycaster(); // Raycaster for collision detection
+const collisionDistance = 0.5; // Minimum distance to detect collisions
+
+// --- Load map And Collission objects ---
+const mapLoader = new GLTFLoader();
+mapLoader.load("assets/models/texturedmap.glb", (gltf) => {
+  const map = gltf.scene;
+  scene.add(map); // Add the map to the scene
+
+  // Add all children of the map to the collisionObjects array
+  map.traverse((child) => {
+    if (child.isMesh) {
+      console.log(child);
+      collisionObjects.push(child);
+    }
+  });
+});
+
+// --- Load Character Model ---
+const loader = new GLTFLoader();
+loader.load("assets/models/Soldier.glb", (gltf) => {
+  character = gltf.scene;
+  character.scale.set(1, 1, 1);
+  scene.add(character);
+});
+
+// --- Networking: Player Management ---
+function addOtherPlayer(id, data) {
+  if (otherPlayers[id]) {
+    return; // Prevent duplicates
+  }
+  const loader = new GLTFLoader();
+  loader.load("assets/models/Soldier.glb", (gltf) => {
+    const player = gltf.scene;
+    player.scale.set(1, 1, 1);
+    player.position.set(
+      data.position?.x || data.x || 0,
+      data.position?.y || data.y || 0,
+      data.position?.z || data.z || 0
+    );
+    player.rotation.y = data.rotation || 0;
+    scene.add(player);
+    otherPlayers[id] = player;
+  });
+}
+
+function updateOtherPlayer(id, data) {
+  const player = otherPlayers[id];
+  if (player) {
+    // Interpoleer positie voor vloeiendere beweging
+    player.position.lerp(
+      new THREE.Vector3(data.position.x, data.position.y, data.position.z),
+      0.3 // Hoe hoger, hoe sneller hij naar de nieuwe positie beweegt
+    );
+    player.rotation.y = data.rotation;
+  }
+}
+
+function removeOtherPlayer(id) {
+  if (otherPlayers[id]) {
+    scene.remove(otherPlayers[id]);
+    delete otherPlayers[id];
+  }
+}
+
+// --- Networking: Socket Event Listeners ---
 // Listen for the "init" event to receive initial player data.
 socket.on("init", (players) => {
   for (const id in players) {
-    // If the player ID is not the same as the socket ID, add them to the scene.
-    if (id !== socket.id) {
-      // Add other players to the scene.
+    if (id !== socket.id && !otherPlayers[id]) {
       addOtherPlayer(id, players[id]);
-    } else {
-      console.log("something went wrong");
     }
   }
 });
@@ -29,58 +121,18 @@ socket.on("newPlayer", (data) => {
 });
 
 socket.on("update", (data) => {
-  const other = otherPlayers[data.id];
-  if (other) {
-    other.position.set(data.position.x, data.position.y, data.position.z);
-    other.rotation.y = data.rotation;
+  if (data.id !== socket.id) {
+    updateOtherPlayer(data.id, data);
+  } else {
+    console.log("something went wrong");
   }
 });
 
 socket.on("removePlayer", (id) => {
-  if (otherPlayers[id]) {
-    scene.remove(otherPlayers[id]);
-    delete otherPlayers[id];
-  }
+  removeOtherPlayer(id);
 });
 
-function addOtherPlayer(id, data) {
-  const loader = new GLTFLoader();
-  loader.load("assets/models/Soldier.glb", (gltf) => {
-    const player = gltf.scene;
-    player.scale.set(1, 1, 1);
-    player.position.set(
-      data.position?.x || 0,
-      data.position?.y || 0,
-      data.position?.z || 0
-    );
-    player.rotation.y = data.rotation || 0;
-
-    scene.add(player);
-    otherPlayers[id] = player;
-  });
-}
-
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-
-const color = 0xffffff;
-const intensity = 1;
-const light = new THREE.DirectionalLight(color, intensity);
-light.position.set(10, 10, 10);
-scene.add(light);
-
-camera.position.set(0, 1.5, 0);
-
-const pressedKeys = {}; // Empty object to capture pressed keys.
-let isSprinting = false; // Variable to track sprinting state.
+// --- Input Handling ---
 document.addEventListener("keydown", (e) => {
   pressedKeys[e.key.toLowerCase()] = true;
   if (e.key.toLowerCase() === "shift") {
@@ -92,15 +144,7 @@ document.addEventListener("keyup", (e) => {
   isSprinting = false; // Set sprinting to false when shift is released.
 });
 
-// Rotation and Position information of the player.
-let horizontalLookAngle = 0; // Horizontal rotation.
-let verticalLookAngle = 0; // Vertical rotation.
-const cameraRotation = new THREE.Quaternion();
-const cameraPosition = new THREE.Vector3(0, 2, 0);
-const movementDirection = new THREE.Vector3();
-let previousFrameTime = performance.now();
-let pendingMouseMove = null;
-
+// --- Mouse Look ---
 // Mouse movement for rotation.
 document.addEventListener("pointerlockchange", () => {
   if (document.pointerLockElement) {
@@ -111,6 +155,7 @@ document.addEventListener("pointerlockchange", () => {
     document.removeEventListener("mousemove", onMouseMove);
   }
 });
+
 document.addEventListener("mousemove", (e) => {
   pendingMouseMove = e;
 
@@ -145,34 +190,7 @@ function processMouseMove() {
   }
 }
 
-const collisionObjects = []; // Array to store objects for collision detection
-
-// Load the map and add it to the collisionObjects array
-const mapLoader = new GLTFLoader();
-mapLoader.load("assets/models/texturedmap.glb", (gltf) => {
-  const map = gltf.scene;
-  scene.add(map); // Add the map to the scene
-
-  // Add all children of the map to the collisionObjects array
-  map.traverse((child) => {
-    if (child.isMesh) {
-      console.log(child);
-      collisionObjects.push(child);
-    }
-  });
-});
-
-let character;
-const loader = new GLTFLoader();
-loader.load("assets/models/Soldier.glb", (gltf) => {
-  character = gltf.scene;
-  character.scale.set(1, 1, 1);
-  scene.add(character);
-});
-
-const raycaster = new THREE.Raycaster(); // Raycaster for collision detection
-const collisionDistance = 0.5; // Minimum distance to detect collisions
-
+// --- Animation Loop ---
 function animate() {
   requestAnimationFrame(animate); // https://threejs.org/manual/#en/creating-a-scene according to this documentation it's better to use this.
 
@@ -242,22 +260,11 @@ function animate() {
     new THREE.Euler(verticalLookAngle, horizontalLookAngle, 0, "YXZ")
   );
 
-  // Send position and rotation to the server.
-  if (character) {
-    socket.emit("update", {
-      position: {
-        x: character.position.x,
-        y: character.position.y,
-        z: character.position.z,
-      },
-      rotation: horizontalLookAngle,
-    });
-  }
-
   // Rendering the scene.
   renderer.render(scene, camera); // Rendering the scene and camera.
 }
 
+// --- Responsive Resize Handling ---
 window.addEventListener("resize", () => {
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.aspect = window.innerWidth / window.innerHeight;
